@@ -1,0 +1,165 @@
+{
+  "builders": [
+    {
+      "type": "vmware-iso",
+      "iso_url": "{{user `iso_url`}}",
+      "iso_checksum_type": "{{user `iso_checksum_type`}}",
+      "iso_checksum": "{{user `iso_checksum`}}",
+      "headless": true,
+      "boot_wait": "5m",
+      "ssh_username": "vagrant",
+      "ssh_password": "vagrant",
+      "ssh_wait_timeout": "6h",
+      "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "guest_os_type": "windows8srv-64",
+      "tools_upload_flavor": "windows",
+      "disk_size": 61440,
+      "vnc_port_min": 5900,
+      "vnc_port_max": 5980,
+      "floppy_files": [
+        "{{user `autounattend`}}",
+        "./scripts/openssh.ps1"
+      ],
+      "vmx_data": {
+        "RemoteDisplay.vnc.enabled": "false",
+        "RemoteDisplay.vnc.port": "5900",
+        "memsize": "2048",
+        "numvcpus": "2",
+        "scsi0.virtualDev": "lsisas1068"
+      }
+    },
+    {
+      "type": "virtualbox-iso",
+      "iso_url": "{{user `iso_url`}}",
+      "iso_checksum_type": "{{user `iso_checksum_type`}}",
+      "iso_checksum": "{{user `iso_checksum`}}",
+      "headless": true,
+      "boot_wait": "5m",
+      "ssh_username": "vagrant",
+      "ssh_password": "vagrant",
+      "ssh_wait_timeout": "6h",
+      "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "guest_os_type": "Windows2016_64",
+      "disk_size": 61440,
+      "floppy_files": [
+        "{{user `autounattend`}}",
+        "./scripts/openssh.ps1"
+      ],
+      "vboxmanage": [
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--memory",
+          "2048"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--cpus",
+          "2"
+        ]
+      ]
+    },
+    {
+      "type": "parallels-iso",
+      "iso_url": "{{user `iso_url`}}",
+      "iso_checksum_type": "{{user `iso_checksum_type`}}",
+      "iso_checksum": "{{user `iso_checksum`}}",
+      "boot_wait": "5m",
+      "ssh_username": "vagrant",
+      "ssh_password": "vagrant",
+      "ssh_wait_timeout": "6h",
+      "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "guest_os_type": "win-2016",
+      "parallels_tools_flavor": "win",
+      "disk_size": 61440,
+      "floppy_files": [
+        "{{user `autounattend`}}",
+        "./scripts/openssh.ps1"
+      ],
+      "prlctl": [
+        [
+          "set", "{{.Name}}",
+          "--memsize", "2048"
+        ],
+        [
+          "set", "{{.Name}}",
+          "--cpus", "2"
+        ],
+        [
+          "set", "{{.Name}}",
+          "--winsystray-in-macmenu", "off"
+        ],
+        [
+          "set", "{{.Name}}",
+          "--startup-view", "window"
+        ],
+        [
+          "set", "{{.Name}}",
+          "--efi-boot", "off"
+        ]
+      ]
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "remote_path": "/tmp/script.bat",
+      "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
+      "scripts": [
+        "./scripts/vm-guest-tools.bat",
+        "./scripts/vagrant-ssh.bat",
+        "./scripts/enable-rdp.bat"
+      ]
+    },
+	
+	{
+	"type": "powershell",
+	"scripts": [
+	"./scripts/new/chocolatey.ps1"
+	]
+	},
+	
+		{
+      "type": "windows-restart",
+      "restart_timeout": "2h"
+		},
+		
+	{
+	"type": "powershell",
+	"scripts": [
+	"./scripts/new/IIS_install.ps1",
+	"./scripts/new/APP_install.ps1"
+
+	]
+	},
+	
+	{
+      "type": "windows-restart",
+      "restart_timeout": "2h"
+	},
+		
+	{
+	"type": "powershell",
+	"scripts": [
+	"./scripts/new/setupSQL.ps1",
+	"./scripts/new/add_app_to_server.ps1"
+	]
+	}
+	
+  ],
+  "post-processors": [
+    {
+      "type": "vagrant",
+      "keep_input_artifact": false,
+      "output": "windows_2016_{{.Provider}}.box",
+      "vagrantfile_template": "Vagrantfile"
+    }
+  ],
+  "variables": {
+    "iso_url": "./iso/14393.0.161119-1705.RS1_REFRESH_SERVER_EVAL_X64FRE_EN-US.iso",
+    "iso_checksum_type": "sha1",
+    "iso_checksum": "772700802951b36c8cb26a61c040b9a8dc3816a3",
+    "autounattend": "./Autounattend.xml"
+  }
+}
