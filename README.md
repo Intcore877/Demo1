@@ -22,5 +22,5 @@ The project goal is to get acquainted with the technologies of development of We
   </ul>
 <hline>
 <h2>Deployment diagram</h2>
-<div align="center"><img src=""></div>
+<div align="center"><img src="https://github.com/Intcore877/Demo1/blob/master/Deployment%20Diagram.jpg"></div>
 <hline>  
